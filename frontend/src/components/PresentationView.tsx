@@ -179,60 +179,92 @@ export function PresentationView({ note, onBack }: Props) {
         return parts.length === 1 && typeof parts[0] === 'string' ? parts[0] : <>{parts}</>;
     }
 
-    /** Full markdown block renderer — supports # ## ### ####, bullets, paragraphs */
+    /** Styled code block component — VS Code dark style with macOS window chrome */
+    function CodeBlock({ lang, code }: { lang: string; code: string }) {
+        const label = lang ? lang.toUpperCase() : 'CODE';
+        return (
+            <div className="code-block">
+                <div className="code-block-header">
+                    <div className="code-block-dots">
+                        <span className="dot dot-red" />
+                        <span className="dot dot-yellow" />
+                        <span className="dot dot-green" />
+                    </div>
+                    <span className="code-block-lang">{label}</span>
+                    <span style={{ width: 60 }} />
+                </div>
+                <pre className="code-block-body"><code>{code.trimEnd()}</code></pre>
+            </div>
+        );
+    }
+
+    /** Full markdown renderer — two passes: extract code blocks first, then process lines */
     function renderMarkdown(text: string) {
         if (!text) return null;
-        const lines = text.split('\n');
-        return lines.map((line, i) => {
-            const t = line.trim();
 
-            // Empty line → small spacer
-            if (!t) return <div key={i} style={{ height: '6px' }} />;
+        const elements: React.ReactNode[] = [];
+        let gKey = 0;
 
-            // #### H4
-            if (/^#{4}\s/.test(t)) {
-                return <h5 key={i} className="md-h4">{parseInline(t.replace(/^#{4}\s/, ''))}</h5>;
-            }
-            // ### H3
-            if (/^#{3}\s/.test(t)) {
-                return <h4 key={i} className="md-h3">{parseInline(t.replace(/^#{3}\s/, ''))}</h4>;
-            }
-            // ## H2
-            if (/^#{2}\s/.test(t)) {
-                return <h3 key={i} className="md-h2">{parseInline(t.replace(/^#{2}\s/, ''))}</h3>;
-            }
-            // # H1
-            if (/^#\s/.test(t)) {
-                return <h2 key={i} className="md-h1">{parseInline(t.replace(/^#\s/, ''))}</h2>;
-            }
+        const processLines = (segment: string, keyBase: number) => {
+            segment.split('\n').forEach((line, i) => {
+                const t = line.trim();
+                const k = `${keyBase}-${i}`;
+                if (!t) { elements.push(<div key={k} className="md-spacer" />); return; }
 
-            // Bullet point (-, *, •)
-            if (/^[-*•]\s/.test(t)) {
-                const clean = t.replace(/^[-*•]\s*/, '');
-                return (
-                    <div key={i} className="bullet" style={{ display: 'flex', gap: '10px', padding: '4px 0', alignItems: 'flex-start' }}>
-                        <div className="bullet-dot" style={{
-                            width: '6px', height: '6px', borderRadius: '50%',
-                            background: 'var(--accent)', marginTop: '9px', flexShrink: 0
-                        }} />
-                        <span style={{ color: 'var(--text-secondary)', fontSize: '14px', lineHeight: '1.7' }}>
-                            {parseInline(clean)}
-                        </span>
+                if (/^#{4}\s/.test(t)) return elements.push(
+                    <div key={k} className="md-h4-block">
+                        <span className="md-icon-h4">◆</span>
+                        <h5 className="md-h4">{parseInline(t.replace(/^#{4}\s/, ''))}</h5>
                     </div>
                 );
-            }
+                if (/^#{3}\s/.test(t)) return elements.push(
+                    <div key={k} className="md-h3-block">
+                        <span className="md-icon-h3">▸</span>
+                        <h4 className="md-h3">{parseInline(t.replace(/^#{3}\s/, ''))}</h4>
+                    </div>
+                );
+                if (/^#{2}\s/.test(t)) return elements.push(
+                    <div key={k} className="md-h2-block">
+                        <span className="md-icon-h2">■</span>
+                        <h3 className="md-h2">{parseInline(t.replace(/^#{2}\s/, ''))}</h3>
+                    </div>
+                );
+                if (/^#\s/.test(t)) {
+                    const content = t.replace(/^#\s/, '');
+                    const em = content.match(/^(\p{Emoji_Presentation}|\p{Extended_Pictographic})\s*/u);
+                    const icon = em ? em[0].trim() : '📌';
+                    const title = em ? content.slice(em[0].length) : content;
+                    return elements.push(
+                        <div key={k} className="md-h1-block">
+                            <span className="md-icon-h1">{icon}</span>
+                            <h2 className="md-h1">{parseInline(title)}</h2>
+                        </div>
+                    );
+                }
+                if (/^[-*•]\s/.test(t)) return elements.push(
+                    <div key={k} className="bullet">
+                        <div className="bullet-dot" />
+                        <span className="bullet-text">{parseInline(t.replace(/^[-*•]\s*/, ''))}</span>
+                    </div>
+                );
+                elements.push(<p key={k} className="md-para">{parseInline(t)}</p>);
+            });
+        };
 
-            // Plain paragraph
-            return (
-                <p key={i} className="md-para" style={{
-                    color: 'var(--text-secondary)', fontSize: '14px',
-                    lineHeight: '1.75', margin: '4px 0'
-                }}>
-                    {parseInline(t)}
-                </p>
-            );
-        });
+        // Extract fenced code blocks first, process surrounding text as lines
+        const codeRe = /```(\w*)\n?([\s\S]*?)```/g;
+        let last = 0;
+        let m: RegExpExecArray | null;
+        while ((m = codeRe.exec(text)) !== null) {
+            if (m.index > last) processLines(text.slice(last, m.index), gKey++);
+            elements.push(<CodeBlock key={`cb-${gKey++}`} lang={m[1]} code={m[2]} />);
+            last = m.index + m[0].length;
+        }
+        if (last < text.length) processLines(text.slice(last), gKey++);
+
+        return elements;
     }
+
 
 
     if (loading) {
@@ -355,15 +387,7 @@ export function PresentationView({ note, onBack }: Props) {
                             </div>
                         </div>
 
-                        {/* Reference image */}
-                        {selected.image_url && (
-                            <img
-                                src={selected.image_url}
-                                alt={note.title}
-                                className="reference-image"
-                                onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                            />
-                        )}
+
 
                         {/* Short Summary */}
                         <div className="card">
@@ -403,7 +427,7 @@ export function PresentationView({ note, onBack }: Props) {
                                 </div>
                                 <div>
                                     <div className="card-title">Asociaciones Mnemotécnicas</div>
-                                    <div className="card-subtitle">Conexiones verosímiles para memorizar conceptos difíciles</div>
+                                    <div className="card-subtitle">Conexiones inverosímiles para memorizar conceptos difíciles</div>
                                 </div>
                             </div>
                             {parseAssociations(selected.associations).length > 0 ? (
@@ -427,25 +451,22 @@ export function PresentationView({ note, onBack }: Props) {
                                 <div className="card-icon" style={{ background: 'rgba(100,210,255,0.15)' }}>
                                     <Map size={16} color="var(--info)" />
                                 </div>
-                                <div>
-                                    <div className="card-title">Mapa Mental</div>
-                                    <div className="card-subtitle">Estructura visual del conocimiento (Mermaid.js)</div>
-                                </div>
+                                <div className="card-title">Mapa Mental</div>
                             </div>
                             <div className="mermaid-container">
                                 <MermaidChart chart={selected.mermaid_map} id={`chart-${selected.id}`} />
                             </div>
                         </div>
 
-                        {/* Story */}
-                        <div className="card">
+                        {/* Historia Inverosímil */}
+                        <div className="card story-card">
                             <div className="card-header">
                                 <div className="card-icon" style={{ background: 'rgba(255,159,10,0.15)' }}>
                                     <Brain size={16} color="var(--warning)" />
                                 </div>
                                 <div>
-                                    <div className="card-title">Historia Verosímil</div>
-                                    <div className="card-subtitle">Narrativa memorable que integra todos los conceptos</div>
+                                    <div className="card-title">Historia Inverosímil</div>
+                                    <div className="card-subtitle">Narrativa fantástica e imposible que graba los conceptos en tu memoria</div>
                                 </div>
                             </div>
                             <div className="story-text">

@@ -119,6 +119,54 @@ p {
   overflow: hidden;
 }
 
+/* ── Sidebar toggle button ─────────────────────────────── */
+.sidebar-toggle-btn {
+  position: absolute;
+  top: 14px;
+  left: 16px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--bg-overlay);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.sidebar-toggle-btn:hover {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border-color: var(--accent-border);
+}
+
+/* ── .main-content needs relative positioning for the toggle button ── */
+.main-content {
+  position: relative;
+}
+
+/* ── Sidebar collapse ──────────────────────────────────── */
+.app-shell.sidebar-hidden .sidebar {
+  width: 0;
+  min-width: 0;
+  border-right: none;
+  overflow: hidden;
+}
+
+/* Shift the NoteEditor / content left edge when sidebar is visible
+   (topbar already handles breadcrumb; add left-padding so toggle btn
+   doesn't overlap content) */
+.topbar {
+  padding-left: 58px;
+  /* room for toggle button */
+}
+
+
+
 /* ── Sidebar ───────────────────────────────────────────── */
 .sidebar {
   width: 260px;
@@ -683,7 +731,7 @@ p {
   margin-top: 4px;
 }
 
-/* Reference image */
+/* Reference image (old position — kept for backward compat) */
 .reference-image {
   width: 100%;
   height: 200px;
@@ -691,6 +739,20 @@ p {
   border-radius: var(--radius-lg);
   margin-bottom: 24px;
   border: 1px solid var(--border);
+}
+
+/* Cinematic story image — inside Historia Inverosímil card */
+.story-image {
+  width: 100%;
+  height: 280px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  margin: 0 0 20px;
+  display: block;
+  position: relative;
+  /* Dramatic vignette to make text readable over image if needed */
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), inset 0 -60px 40px rgba(0, 0, 0, 0.4);
+  filter: saturate(1.2) contrast(1.05);
 }
 
 /* Cards */
@@ -746,18 +808,24 @@ p {
   padding-left: 14px;
 }
 
-/* Extended summary — markdown rendered */
+
+/* ── Extended summary ─ beautiful reading mode ─────────────── */
 .extended-summary {
-  font-size: 14px;
-  line-height: 1.8;
+  font-size: 14.5px;
+  line-height: 1.9;
   color: var(--text-secondary);
 }
 
-.extended-summary .bullet {
+/* ── Bullet list ─────────────────────────────────────────── */
+.bullet {
   display: flex;
   gap: 10px;
   padding: 5px 0;
   align-items: flex-start;
+}
+
+.extended-summary .bullet {
+  padding: 4px 0 4px 4px;
 }
 
 .bullet-dot {
@@ -765,61 +833,267 @@ p {
   height: 6px;
   border-radius: 50%;
   background: var(--accent);
-  margin-top: 7px;
+  margin-top: 9px;
   flex-shrink: 0;
 }
 
-/* ── Markdown heading styles (web view) ─────────────────── */
-.md-h1,
-.md-h2,
-.md-h3,
-.md-h4,
-.md-h5 {
-  margin: 14px 0 6px;
-  line-height: 1.3;
-  font-weight: 700;
-}
-
-.md-h1 {
-  font-size: 17px;
-  color: var(--text-primary);
-  border-bottom: 2px solid var(--accent);
-  padding-bottom: 4px;
-}
-
-.md-h2 {
-  font-size: 15px;
-  color: var(--text-primary);
-  border-bottom: 2px solid #ff453a;
-  padding-bottom: 3px;
-}
-
-.md-h3 {
-  font-size: 13.5px;
-  color: var(--text-primary);
-  border-bottom: 2px solid #30d158;
-  padding-bottom: 2px;
-}
-
-.md-h4 {
-  font-size: 12.5px;
+.bullet-text {
   color: var(--text-secondary);
-  border-bottom: 1px solid var(--border-strong);
-  padding-bottom: 2px;
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+/* ── Spacer & plain paragraph ─────────────────────────────── */
+.md-spacer {
+  height: 14px;
 }
 
 .md-para {
   color: var(--text-secondary);
-  font-size: 14px;
-  line-height: 1.75;
-  margin: 4px 0;
+  font-size: 14.5px;
+  line-height: 1.9;
+  margin: 0 0 14px;
+  text-align: justify;
+  hyphens: auto;
+  word-spacing: 0.02em;
 }
 
-.extended-summary .md-h1+.bullet,
-.extended-summary .md-h2+.bullet,
-.extended-summary .md-h3+.bullet {
-  margin-top: 4px;
+.md-para:last-child {
+  margin-bottom: 0;
 }
+
+/* ═════════════════════════════════════════════════════════════
+   HEADING BLOCK WRAPPERS - beautiful reading experience
+   ═════════════════════════════════════════════════════════════ */
+
+/* Base reset - all heading elements inside blocks */
+.md-h1,
+.md-h2,
+.md-h3,
+.md-h4 {
+  line-height: 1.3;
+  font-weight: 700;
+  margin: 0;
+  padding: 0;
+  border: none;
+  flex: 1;
+}
+
+/* ── H1 block: emoji badge + blue gradient ─────────────────── */
+.md-h1-block {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 36px 0 16px;
+  padding: 16px 20px;
+  background: linear-gradient(90deg,
+      rgba(10, 132, 255, 0.13) 0%,
+      rgba(10, 132, 255, 0.03) 60%,
+      transparent 100%);
+  border-left: 4px solid var(--accent);
+  border-radius: 0 16px 16px 0;
+  position: relative;
+}
+
+.md-h1-block::before {
+  content: '';
+  position: absolute;
+  top: -18px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, var(--border-strong) 0%, transparent 70%);
+  opacity: 0.6;
+}
+
+.md-h1-block .md-h1 {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
+}
+
+.md-icon-h1 {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+  background: rgba(10, 132, 255, 0.16);
+  font-size: 24px;
+  flex-shrink: 0;
+  box-shadow: 0 3px 12px rgba(10, 132, 255, 0.28),
+    0 0 0 1px rgba(10, 132, 255, 0.15);
+}
+
+/* ── H2 block: red left-bar + warm background ──────────────── */
+.md-h2-block {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 26px 0 12px;
+  padding: 10px 16px;
+  border-left: 3px solid rgba(255, 69, 58, 0.75);
+  background: linear-gradient(90deg,
+      rgba(255, 69, 58, 0.07) 0%,
+      rgba(255, 69, 58, 0.01) 50%,
+      transparent 100%);
+  border-radius: 0 10px 10px 0;
+}
+
+.md-h2-block .md-h2 {
+  font-size: 15.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.md-icon-h2 {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  background: rgba(255, 69, 58, 0.15);
+  color: #ff453a;
+  font-size: 12px;
+  font-weight: 800;
+  flex-shrink: 0;
+  box-shadow: 0 1px 4px rgba(255, 69, 58, 0.2);
+}
+
+/* ── H3 block: green left-bar, indented ────────────────────── */
+.md-h3-block {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 18px 0 8px;
+  padding: 7px 12px;
+  border-left: 2px solid rgba(48, 209, 88, 0.65);
+  background: linear-gradient(90deg,
+      rgba(48, 209, 88, 0.06) 0%,
+      transparent 80%);
+  border-radius: 0 8px 8px 0;
+}
+
+.md-h3-block .md-h3 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.md-icon-h3 {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  background: rgba(48, 209, 88, 0.14);
+  color: #30d158;
+  font-size: 10px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+/* ── H4 block: neutral, deeper indent ──────────────────────── */
+.md-h4-block {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0 6px;
+}
+
+.md-h4-block .md-h4 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-strong) !important;
+  padding-bottom: 2px;
+}
+
+.md-icon-h4 {
+  color: var(--text-tertiary);
+  font-size: 9px;
+  flex-shrink: 0;
+}
+
+
+/* ═════════════════════════════════════════════════════════════
+   CODE BLOCK — VS Code-style dark panel with macOS chrome
+   ═════════════════════════════════════════════════════════════ */
+
+.code-block {
+  margin: 18px 0;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #0d1117;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+}
+
+.code-block-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.code-block-dots {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+}
+
+.dot-red {
+  background: #ff5f57;
+}
+
+.dot-yellow {
+  background: #febc2e;
+}
+
+.dot-green {
+  background: #28c840;
+}
+
+.code-block-lang {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.code-block-body {
+  margin: 0;
+  padding: 18px 22px;
+  overflow-x: auto;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #e6edf3;
+  tab-size: 2;
+}
+
+.code-block-body code {
+  background: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  font-size: inherit !important;
+  color: inherit !important;
+  font-family: inherit !important;
+}
+
 
 /* Associations */
 .associations-grid {
@@ -1282,9 +1556,18 @@ p {
 
 /* ── Print (PDF) ───────────────────────────────────────── */
 
-/* Standard print margins — let browser/user choose orientation */
+/* ── Dual mermaid render: screen shows dark, print shows light ── */
+@media screen {
+  .mermaid-light-version {
+    display: none !important;
+  }
+}
+
+/* ── Print (PDF) ───────────────────────────────────────── */
+
+/* Standard margins — browser/user controls orientation */
 @page {
-  margin: 1.5cm;
+  margin: 1cm 1.2cm;   /* top/bottom 1cm, sides 1.2cm */
 }
 
 @media print {
@@ -1309,7 +1592,6 @@ p {
     overflow: visible !important;
     background: #fff !important;
     color: #1d1d1f !important;
-    /* Remove browser default body margin since @page handles it */
     margin: 0 !important;
     padding: 0 !important;
   }
@@ -1342,52 +1624,80 @@ p {
   .print-spacer,
   .btn,
   .btn-icon,
-  .version-badge {
+  .version-badge,
+  .presentation-header-actions {
     display: none !important;
   }
 
-  /* ── Reference image — compact ── */
-  .reference-image {
-    width: 100% !important;
-    height: 140px !important;
-    object-fit: cover !important;
-    border-radius: 4px !important;
-    margin-bottom: 16px !important;
-    border: 1px solid #e0e0e0 !important;
+  /* ── Version badge/metadata ── */
+  .presentation-header {
+    margin-bottom: 6px !important;
   }
 
-  /* ── Cards: flat, borderless — full width ── */
+  /* ── Reference image (legacy) ── */
+  .reference-image {
+    display: none !important;
+  }
+
+  /* ── Story cinematic image ── */
+  .story-image {
+    width: 100% !important;
+    height: 180px !important;
+    object-fit: cover !important;
+    border-radius: 6px !important;
+    margin-bottom: 14px !important;
+    box-shadow: none !important;
+    filter: none !important;
+    display: block !important;
+  }
+
+  /* ── Cards: flat, no borders, full width ──
+     Removing border-bottom eliminates the strange divider lines. */
   .card {
     background: #fff !important;
     border: none !important;
-    border-bottom: 1px solid #e0e0e0 !important;
     border-radius: 0 !important;
     box-shadow: none !important;
-    padding: 14px 0 !important;
-    margin-bottom: 4px !important;
+    padding: 6px 0 !important;
+    margin-bottom: 0 !important;
     break-inside: auto;
     page-break-inside: auto;
     overflow: visible !important;
     height: auto !important;
   }
 
-  /* Keep small cards on one page when possible */
-  .card:not(:has(.mermaid-container)):not(:has(.associations-grid)) {
+  /* Small cards that don't have the mermaid or grid: keep together */
+  .card:not(:has(.mermaid-dark-version)):not(:has(.associations-grid)):not(:has(.story-text)) {
     break-inside: avoid;
     page-break-inside: avoid;
   }
 
-  /* Card icon + header */
-  .card-header {
-    margin-bottom: 10px;
+  /* ── Mind map: EXCLUSIVE page ── */
+  .card:has(.mermaid-dark-version) {
+    break-before: page !important;
+    page-break-before: always !important;
+    break-after: page !important;
+    page-break-after: always !important;
   }
 
+  /* ── Historia Inverosímil: EXCLUSIVE page ── */
+  .card:has(.story-text) {
+    break-before: page !important;
+    page-break-before: always !important;
+  }
+
+  /* Card icon hidden; header compact */
   .card-icon {
     display: none !important;
   }
 
+  .card-header {
+    margin-bottom: 4px !important;
+    padding-bottom: 2px !important;
+  }
+
   .card-title {
-    font-size: 13px !important;
+    font-size: 11px !important;
     font-weight: 700 !important;
     color: #0071e3 !important;
     text-transform: uppercase !important;
@@ -1395,75 +1705,256 @@ p {
   }
 
   .card-subtitle {
-    font-size: 10px !important;
+    font-size: 8.5px !important;
     color: #8a8a8e !important;
+    display: none !important;   /* save space — title is enough in PDF */
   }
 
-  /* ── Presentation header ── */
+  /* ── Presentation title ── */
   .presentation-title {
-    font-size: 22px !important;
+    font-size: 18px !important;
     font-weight: 800 !important;
     color: #1d1d1f !important;
-    margin-bottom: 4px !important;
+    margin-bottom: 2px !important;
   }
 
-  /* ── Summaries ── */
+  /* ── Summaries: justified, no cut mid-paragraph ── */
   .short-summary {
-    font-size: 13px !important;
-    line-height: 1.7 !important;
+    font-size: 11.5px !important;
+    line-height: 1.55 !important;
     color: #3a3a3a !important;
     border-left: 3px solid #0071e3 !important;
-    padding-left: 12px !important;
+    padding-left: 10px !important;
     text-align: justify !important;
   }
 
   .extended-summary {
-    font-size: 12.5px !important;
-    line-height: 1.7 !important;
+    font-size: 11.5px !important;
+    line-height: 1.5 !important;
     text-align: justify !important;
   }
 
+  /* Paragraphs and bullets: avoid splitting mid-sentence */
   .md-para {
     text-align: justify !important;
-    font-size: 12.5px !important;
+    font-size: 11.5px !important;
     color: #3a3a3a !important;
+    line-height: 1.5 !important;
+    margin: 4px 0 !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+    orphans: 3;
+    widows: 3;
   }
 
-  /* Markdown headings in print — colour-coded underlines */
+  .bullet {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* ── Markdown headings (print) — colour-coded underlines ── */
   .md-h1 {
-    font-size: 16px !important;
+    font-size: 14px !important;
     font-weight: 800 !important;
     color: #0a3d91 !important;
-    border-bottom: 2.5px solid #0071e3 !important;
-    padding-bottom: 4px !important;
-    margin: 16px 0 8px !important;
+    border-bottom: 2px solid #0071e3 !important;
+    padding-bottom: 2px !important;
+    margin: 10px 0 5px !important;
+    break-after: avoid;
+    page-break-after: avoid;
   }
 
   .md-h2 {
-    font-size: 14px !important;
+    font-size: 12.5px !important;
     font-weight: 700 !important;
     color: #8b0000 !important;
-    border-bottom: 2px solid #dc2626 !important;
-    padding-bottom: 3px !important;
-    margin: 12px 0 6px !important;
+    border-bottom: 1.5px solid #dc2626 !important;
+    padding-bottom: 2px !important;
+    margin: 8px 0 4px !important;
+    break-after: avoid;
+    page-break-after: avoid;
   }
 
   .md-h3 {
-    font-size: 12.5px !important;
+    font-size: 11.5px !important;
     font-weight: 700 !important;
     color: #14532d !important;
-    border-bottom: 2px solid #16a34a !important;
-    padding-bottom: 2px !important;
-    margin: 10px 0 5px !important;
+    border-bottom: 1px solid #16a34a !important;
+    padding-bottom: 1px !important;
+    margin: 6px 0 3px !important;
+    break-after: avoid;
+    page-break-after: avoid;
   }
 
   .md-h4 {
-    font-size: 11.5px !important;
+    font-size: 11px !important;
     font-weight: 600 !important;
     color: #4a4a4a !important;
-    border-bottom: 1px solid #999 !important;
-    padding-bottom: 2px !important;
-    margin: 8px 0 4px !important;
+    border-bottom: 1px solid #bbb !important;
+    padding-bottom: 1px !important;
+    margin: 5px 0 2px !important;
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  /* ── Wrapper blocks: light-mode block style for print ── */
+  .md-h1-block {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    background: linear-gradient(90deg, #dbeafe 0%, #f0f7ff 60%, #fff 100%) !important;
+    border-left: 4px solid #2563eb !important;
+    border-radius: 0 10px 10px 0 !important;
+    padding: 3px 8px !important;
+    margin: 4px 0 2px !important;
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  .md-h1-block::before {
+    display: none !important;
+  }
+
+  .md-h2-block {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    background: linear-gradient(90deg, #fee2e2 0%, #fff5f5 60%, #fff 100%) !important;
+    border-left: 3px solid #dc2626 !important;
+    border-radius: 0 8px 8px 0 !important;
+    padding: 4px 10px !important;
+    margin: 5px 0 3px !important;
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  .md-h3-block {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    background: linear-gradient(90deg, #dcfce7 0%, #f0fff4 60%, #fff 100%) !important;
+    border-left: 2px solid #16a34a !important;
+    border-radius: 0 6px 6px 0 !important;
+    padding: 3px 8px !important;
+    margin: 4px 0 2px !important;
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  .md-h4-block {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 2px 6px !important;
+    margin: 3px 0 2px !important;
+    border-left: 1px solid #aaa !important;
+  }
+
+  /* Heading text inside blocks */
+  .md-h1-block .md-h1 {
+    flex: 1 !important;
+    font-size: 13px !important;
+    font-weight: 800 !important;
+    color: #1e3a8a !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  .md-h2-block .md-h2 {
+    flex: 1 !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    color: #7f1d1d !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  .md-h3-block .md-h3 {
+    flex: 1 !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    color: #14532d !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  .md-h4-block .md-h4 {
+    flex: 1 !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    color: #4a4a4a !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Icon badges: print-friendly (no background, just the symbol) */
+  .md-icon-h1 {
+    background: none !important;
+    box-shadow: none !important;
+    width: auto !important;
+    height: auto !important;
+    font-size: 14px !important;
+    border-radius: 0 !important;
+  }
+
+  .md-icon-h2,
+  .md-icon-h3,
+  .md-icon-h4 {
+    background: none !important;
+    box-shadow: none !important;
+    width: auto !important;
+    height: auto !important;
+    font-size: 11px !important;
+    border-radius: 0 !important;
+  }
+
+  /* Bullet text */
+  .bullet-text {
+    font-size: 11px !important;
+    color: #3a3a3a !important;
+    line-height: 1.45 !important;
+  }
+
+  /* ── Code blocks in print: light background, visible ── */
+  .code-block {
+    background: #f6f8fa !important;
+    border: 1.5px solid #d0d7de !important;
+    border-radius: 6px !important;
+    margin: 6px 0 !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .code-block-header {
+    background: #eaeef2 !important;
+    border-bottom: 1px solid #d0d7de !important;
+    padding: 4px 10px !important;
+  }
+
+  .code-block-dots {
+    display: none !important;
+  }
+
+  .code-block-lang {
+    color: #0071e3 !important;
+    font-size: 9px !important;
+  }
+
+  .code-block-body {
+    color: #24292f !important;
+    font-size: 10px !important;
+    padding: 6px 12px !important;
+    line-height: 1.45 !important;
   }
 
   .bullet-dot {
@@ -1474,14 +1965,14 @@ p {
   .associations-grid {
     display: grid !important;
     grid-template-columns: repeat(2, 1fr) !important;
-    gap: 8px !important;
+    gap: 6px !important;
   }
 
   .association-item {
     background: #f5f5f7 !important;
     border: 1px solid #e0e0e0 !important;
     border-radius: 6px !important;
-    padding: 10px !important;
+    padding: 7px !important;
     break-inside: avoid;
   }
 
@@ -1501,71 +1992,77 @@ p {
     color: #6e6e73 !important;
   }
 
-  /* ── Mind map: white background, readable text ── */
-  .mermaid-container {
-    background: #fff !important;
-    border: none !important;
-    border-top: 1px solid #e0e0e0 !important;
-    border-bottom: 1px solid #e0e0e0 !important;
+  /* ── Mind map: use the DARK colorful version but with white SVG background ── */
+  .mermaid-dark-version {
+    display: flex !important;
     width: 100% !important;
-    padding: 8px 0 !important;
-    overflow: visible !important;
-    display: block !important;
-    height: auto !important;
+    justify-content: center !important;
   }
 
-  .mermaid-container svg,
-  .mermaid-container svg[id] {
+  /* Force white background on the dark SVG (outer canvas only) */
+  .mermaid-dark-version svg {
+    background: white !important;
+    border-radius: 8px !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  /* Override ONLY the outermost background rect (the SVG canvas), not node rects */
+  .mermaid-dark-version svg>rect:first-child {
+    fill: white !important;
+  }
+
+  /* Some mermaid themes use a <g class="background"> */
+  .mermaid-dark-version .background {
+    fill: white !important;
+  }
+
+  /* Keep ALL text inside nodes WHITE (dark bg + white text) */
+  .mermaid-dark-version svg text,
+  .mermaid-dark-version svg tspan,
+  .mermaid-dark-version svg .label,
+  .mermaid-dark-version svg .label text {
+    fill: white !important;
+    color: white !important;
+  }
+
+  /* Preserve exact colors for all node elements */
+  .mermaid-dark-version,
+  .mermaid-dark-version * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  /* SVG fills its dedicated page */
+  .mermaid-dark-version svg,
+  .mermaid-dark-version svg[id] {
     width: 100% !important;
     max-width: 100% !important;
-    max-height: 380px !important;
     height: auto !important;
+    max-height: 90vh !important;
     display: block !important;
   }
 
-  /*
-   * Fix dark mermaid theme in print:
-   * Force ALL SVG fills/strokes to light colors so text is readable.
-   * CSS fill overrides SVG fill attributes when !important is used.
-   */
-
-  /* Node background rectangles → light grey */
-  .mermaid-container svg rect,
-  .mermaid-container svg polygon {
-    fill: #e8e8ed !important;
-    stroke: #b0b0b5 !important;
+  /* Hide the light/gray version in print */
+  .mermaid-light-version {
+    display: none !important;
   }
 
-  /* Root node circle → light blue */
-  .mermaid-container svg circle,
-  .mermaid-container svg ellipse {
-    fill: #ddeeff !important;
-    stroke: #0071e3 !important;
-  }
-
-  /* ALL text in the SVG → dark and readable */
-  .mermaid-container svg text,
-  .mermaid-container svg tspan,
-  .mermaid-container svg .label {
-    fill: #1d1d1f !important;
-    color: #1d1d1f !important;
-    stroke: none !important;
-  }
-
-  /* Connector lines → medium grey */
-  .mermaid-container svg path,
-  .mermaid-container svg line {
-    stroke: #888 !important;
-  }
-
-  /* ── Story ── */
+  /* ── Story / Historia Verosímil ── */
   .story-text {
-    font-size: 13px !important;
-    line-height: 1.75 !important;
+    font-size: 11.5px !important;
+    line-height: 1.55 !important;
     color: #1d1d1f !important;
+    text-align: justify !important;
   }
 
   .story-text p {
-    margin-bottom: 10px !important;
+    margin-bottom: 7px !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+    orphans: 3;
+    widows: 3;
   }
 }

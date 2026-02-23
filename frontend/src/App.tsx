@@ -6,17 +6,31 @@ import { ToastProvider } from './components/ToastProvider';
 import { BookOpen } from 'lucide-react';
 import './index.css';
 
+import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+
 function AppContent() {
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
+  const [sidebarHidden, setSidebarHidden] = useState(false);
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell${sidebarHidden ? ' sidebar-hidden' : ''}`}>
       <Sidebar
         selectedNote={selectedNote}
         onSelectNote={setSelectedNote}
       />
 
       <div className="main-content">
+        {/* Sidebar toggle button — always visible in topbar */}
+        <button
+          className="sidebar-toggle-btn"
+          onClick={() => setSidebarHidden(h => !h)}
+          title={sidebarHidden ? 'Mostrar panel' : 'Ocultar panel'}
+        >
+          {sidebarHidden
+            ? <PanelLeftOpen size={18} />
+            : <PanelLeftClose size={18} />}
+        </button>
+
         {selectedNote ? (
           <NoteEditor
             key={selectedNote.id}

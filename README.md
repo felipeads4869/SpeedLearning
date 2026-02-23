@@ -117,4 +117,4 @@ SpeedLearning/
 
 ---
 
-*Generado con Gemini AI · Diseño inspirado en Apple HIG · Mapas mentales con Mermaid.js*
+*Desarrollado por Felipe Ostos, si requiere una versión personalizada con los últimos avances en neuroplásticidad y aprendizaje acelerado, personalizado para la materia o carreras a estudiar, disponible en felipeostos.com*
